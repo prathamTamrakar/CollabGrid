@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-export const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/'
+const rawBackendUrl =
+  import.meta.env.VITE_BACKEND_URL ||
+  import.meta.env.REACT_APP_BACKEND_URL ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5000';
+
+// Strip any trailing slash so ${BACKEND_URL}/api is always well-formed
+export const BACKEND_URL = rawBackendUrl.replace(/\/+$/, '');
 
 export const API_URL = `${BACKEND_URL}/api`;
 

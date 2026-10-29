@@ -20,9 +20,12 @@ export default defineConfig({
       include: '**/*.{jsx,js}',
     }),
   ],
+  envPrefix: ['VITE_', 'REACT_APP_'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'components': path.resolve(__dirname, './src/Components'),
+      'Components': path.resolve(__dirname, './src/Components'),
     },
   },
   server: {
