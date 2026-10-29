@@ -5,18 +5,18 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+const BACKEND_URL = process.env.VITE_BACKEND_URL || window.location.origin;
 const API_URL = `${BACKEND_URL}/api`;
 
 const presetColors = [
-  '#3788d8', 
-  '#ef4444', 
-  '#22c55e', 
-  '#2563eb', 
-  '#f59e42', 
-  '#a855f7', 
-  '#fbbf24', 
-  '#64748b', 
+  '#3788d8',
+  '#ef4444',
+  '#22c55e',
+  '#2563eb',
+  '#f59e42',
+  '#a855f7',
+  '#fbbf24',
+  '#64748b',
 ];
 
 const EventModal = ({ eventInfo, isEditing, onClose, calendarRef }) => {
@@ -131,9 +131,8 @@ const EventModal = ({ eventInfo, isEditing, onClose, calendarRef }) => {
                 <button
                   key={preset}
                   type="button"
-                  className={`w-6 h-6 rounded-full border-2 border-white shadow-xs transition-transform duration-150 ${
-                    color === preset ? 'scale-125 ring-2 ring-indigo-600 ring-offset-1' : 'hover:scale-110'
-                  }`}
+                  className={`w-6 h-6 rounded-full border-2 border-white shadow-xs transition-transform duration-150 ${color === preset ? 'scale-125 ring-2 ring-indigo-600 ring-offset-1' : 'hover:scale-110'
+                    }`}
                   style={{ background: preset }}
                   onClick={() => setColor(preset)}
                   aria-label={`Choose color ${preset}`}
@@ -310,27 +309,24 @@ const CalendarPage = React.memo(() => {
             <div className="flex items-center gap-1.5 self-center">
               <button
                 type="button"
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                  currentView === 'dayGridMonth' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentView === 'dayGridMonth' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
                 onClick={() => handleViewChange('dayGridMonth')}
               >
                 Month
               </button>
               <button
                 type="button"
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                  currentView === 'timeGridWeek' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentView === 'timeGridWeek' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
                 onClick={() => handleViewChange('timeGridWeek')}
               >
                 Week
               </button>
               <button
                 type="button"
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                  currentView === 'timeGridDay' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentView === 'timeGridDay' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
                 onClick={() => handleViewChange('timeGridDay')}
               >
                 Day

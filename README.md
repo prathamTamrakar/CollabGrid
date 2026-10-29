@@ -291,7 +291,7 @@ Kanban-board/
 
 | Variable | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `REACT_APP_BACKEND_URL` | String | `http://localhost:5000` | Backend API base URL when hosted on a different origin |
+| `VITE_BACKEND_URL` | String | `http://localhost:5000` | Backend API base URL when hosted on a different origin |
 
 ---
 
