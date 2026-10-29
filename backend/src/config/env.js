@@ -21,8 +21,13 @@ export const config = {
   sendgridApiKey: process.env.SENDGRID_API_KEY || null,
   fromEmail: process.env.FROM_EMAIL || null,
   corsOrigins: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
-    : [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://127.0.0.1:3000']
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim().replace(/\/+$/, ''))
+    : [
+        (process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, ''),
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173'
+      ]
 };
 
 export function validateEnv() {

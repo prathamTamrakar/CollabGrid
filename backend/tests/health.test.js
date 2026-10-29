@@ -34,6 +34,22 @@ describe('Health and System Routes', () => {
     assert.ok(body.detail.includes('Route'));
   });
 
+  test('OPTIONS preflight and CORS headers are returned for Vercel domains', async () => {
+    const origin = 'https://collabgrid-preview-123.vercel.app';
+    const preflightRes = await fetch(`${baseUrl}/api/health`, {
+      method: 'OPTIONS',
+      headers: {
+        'Origin': origin,
+        'Access-Control-Request-Method': 'GET',
+        'Access-Control-Request-Headers': 'Authorization,Content-Type'
+      }
+    });
+
+    assert.equal(preflightRes.status, 204);
+    assert.equal(preflightRes.headers.get('access-control-allow-origin'), origin);
+    assert.equal(preflightRes.headers.get('access-control-allow-credentials'), 'true');
+  });
+
   test('Close test server', async () => {
     await new Promise((resolve) => server.close(resolve));
   });
