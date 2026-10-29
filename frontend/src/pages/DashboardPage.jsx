@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DetailsModal from '../components/dashboard/DetailsModal.jsx';
+import DetailsModal from '../Components/dashboard/DetailsModal.jsx';
 
 const DashboardPage = ({ stats = {}, projects = [], tasks = [], setCurrentView }) => {
   const [modalData, setModalData] = useState({ isOpen: false, title: '', data: [], columns: [] });

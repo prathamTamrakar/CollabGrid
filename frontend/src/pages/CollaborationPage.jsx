@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth.js';
 import { API_URL as API } from '../services/api.js';
-import Whiteboard from '../components/whiteboard/Whiteboard.jsx';
+import Whiteboard from '../Components/whiteboard/Whiteboard.jsx';
 
 const CollaborationPage = ({ setCurrentView }) => {
   const [projects, setProjects] = useState([]);

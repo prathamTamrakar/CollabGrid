@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthForm } from '../components/auth/AuthForm.jsx';
+import { AuthForm } from '../Components/auth/AuthForm.jsx';
 
 export function AuthPage() {
   return <AuthForm />;

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuth } from './hooks/useAuth.js';
-import LoadingSpinner from './components/common/LoadingSpinner.jsx';
+import LoadingSpinner from './Components/common/LoadingSpinner.jsx';
 import AuthPage from './pages/AuthPage.jsx';
-import AppLayout from './components/layout/AppLayout.jsx';
+import AppLayout from './Components/layout/AppLayout.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import TasksPage from './pages/TasksPage.jsx';
 import ProjectsPage from './pages/ProjectsPage.jsx';
