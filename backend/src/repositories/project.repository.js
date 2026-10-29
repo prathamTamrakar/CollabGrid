@@ -11,9 +11,12 @@ export async function findProjectById(projectId) {
 
 export async function findProjectsByUser(userId) {
   const db = getDatabase();
+  const idStr = String(userId);
   return db.projects.find({
     $or: [
+      { user_id: idStr },
       { user_id: userId },
+      { collaborators: idStr },
       { collaborators: userId }
     ]
   }).to_list(200);

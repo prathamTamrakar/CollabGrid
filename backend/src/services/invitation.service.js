@@ -87,6 +87,7 @@ export async function getPendingInvitesForUser(userId) {
       ...inv,
       id: inv.id || inv._id,
       from_user_name: fromUser ? fromUser.name : 'Unknown User',
+      from_user_email: fromUser ? fromUser.email : '',
       project_name: project ? project.name : 'Unknown Project'
     };
   });
@@ -150,10 +151,12 @@ export async function getProjectInvites({ projectId, userId }) {
 
   return invites.map(inv => {
     const toUser = userMap.get(inv.to_user_id);
+    const userName = toUser ? toUser.name : 'Unknown User';
     return {
       ...inv,
       id: inv.id || inv._id,
-      to_user_name: toUser ? toUser.name : 'Unknown User',
+      to_user_name: userName,
+      user_name: userName,
       to_user_email: toUser ? toUser.email : ''
     };
   });
@@ -161,13 +164,27 @@ export async function getProjectInvites({ projectId, userId }) {
 
 export async function getCollaborativeProjects(userId) {
   const allProjects = await findProjectsByUser(userId);
-  // Projects where user is a collaborator but not the owner
-  const collabProjects = allProjects.filter(p => p.user_id !== userId);
 
-  return collabProjects.map(p => ({
-    ...p,
-    id: p.id || p._id
-  }));
+  // Fetch all project owners to populate owner_name
+  const ownerIds = [...new Set(allProjects.map(p => p.user_id).filter(Boolean))];
+  const owners = await findUsersByIds(ownerIds);
+  const ownerMap = new Map();
+  for (const o of owners) {
+    ownerMap.set(o.id || o._id, o.name);
+  }
+
+  return allProjects.map(p => {
+    const isOwner = p.user_id === userId;
+    const ownerName = ownerMap.get(p.user_id) || (isOwner ? 'You' : 'Team Lead');
+
+    return {
+      ...p,
+      id: p.id || p._id,
+      user_id: p.user_id || userId,
+      collaborators: Array.isArray(p.collaborators) ? p.collaborators : [],
+      owner_name: ownerName
+    };
+  });
 }
 
 export default {

@@ -30,6 +30,11 @@ export async function getProjectCollaborators(projectId) {
   return res.data;
 }
 
+export async function getProjectInvites(projectId) {
+  const res = await api.get(`/projects/${projectId}/invites`);
+  return res.data;
+}
+
 export async function inviteCollaborator(projectId, data) {
   const res = await api.post(`/projects/${projectId}/invite`, data);
   return res.data;
@@ -42,5 +47,6 @@ export default {
   updateProject,
   deleteProject,
   getProjectCollaborators,
+  getProjectInvites,
   inviteCollaborator
 };

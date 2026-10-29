@@ -221,12 +221,44 @@ function createLocalCollection(name) {
   };
 }
 
+// Sanitize queries to avoid Mongoose CastErrors when querying string UUIDs against _id
+function sanitizeFilter(filter = {}) {
+  if (!filter || typeof filter !== 'object') return filter;
+
+  if (Array.isArray(filter)) {
+    return filter.map(sanitizeFilter);
+  }
+
+  const clean = { ...filter };
+
+  if (clean._id && typeof clean._id === 'string' && !mongoose.isValidObjectId(clean._id)) {
+    delete clean._id;
+  }
+
+  if (Array.isArray(clean.$or)) {
+    const validOr = clean.$or
+      .map(sub => sanitizeFilter(sub))
+      .filter(sub => sub && typeof sub === 'object' && Object.keys(sub).length > 0);
+    if (validOr.length === 0) {
+      delete clean.$or;
+    } else if (validOr.length === 1) {
+      delete clean.$or;
+      Object.assign(clean, validOr[0]);
+    } else {
+      clean.$or = validOr;
+    }
+  }
+
+  return clean;
+}
+
 // Adapt Mongoose model to provide consistent methods
 function wrapMongooseModel(model) {
   return {
     name: model.collection.name,
     find: (query = {}) => {
-      const mongooseQuery = model.find(query);
+      const sanitized = sanitizeFilter(query);
+      const mongooseQuery = model.find(sanitized);
       return {
         sort: (field, order = 1) => {
           const sortObj = typeof field === 'object' ? field : { [field]: order };
@@ -244,10 +276,8 @@ function wrapMongooseModel(model) {
     },
     findOne: async (query = {}) => {
       try {
-        if (query._id && typeof query._id === 'string' && !mongoose.isValidObjectId(query._id)) {
-          return null;
-        }
-        return await model.findOne(query).lean();
+        const sanitized = sanitizeFilter(query);
+        return await model.findOne(sanitized).lean();
       } catch (err) {
         if (err.name === 'CastError') return null;
         throw err;
@@ -257,10 +287,22 @@ function wrapMongooseModel(model) {
       const created = await model.create(doc);
       return { insertedId: created._id || created.id };
     },
-    updateOne: async (filter, update, opts = {}) => model.updateOne(filter, update, opts),
-    deleteOne: async (filter) => model.deleteOne(filter),
-    deleteMany: async (filter) => model.deleteMany(filter),
-    countDocuments: async (filter = {}) => model.countDocuments(filter),
+    updateOne: async (filter, update, opts = {}) => {
+      const sanitized = sanitizeFilter(filter);
+      return model.updateOne(sanitized, update, opts);
+    },
+    deleteOne: async (filter) => {
+      const sanitized = sanitizeFilter(filter);
+      return model.deleteOne(sanitized);
+    },
+    deleteMany: async (filter) => {
+      const sanitized = sanitizeFilter(filter);
+      return model.deleteMany(sanitized);
+    },
+    countDocuments: async (filter = {}) => {
+      const sanitized = sanitizeFilter(filter);
+      return model.countDocuments(sanitized);
+    },
     mongooseModel: model
   };
 }

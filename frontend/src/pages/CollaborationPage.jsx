@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../hooks/useAuth.js';
-import { API_URL as API } from '../services/api.js';
 import Whiteboard from '../Components/whiteboard/Whiteboard.jsx';
+import {
+  getCollaborativeProjects,
+  getPendingInvites,
+  sendInvite,
+  acceptInvite,
+  declineInvite,
+  searchUsers
+} from '../services/collaboration.service.js';
+import {
+  getProjectCollaborators,
+  getProjectInvites
+} from '../services/project.service.js';
 
 const CollaborationPage = ({ setCurrentView }) => {
   const [projects, setProjects] = useState([]);
@@ -25,13 +35,21 @@ const CollaborationPage = ({ setCurrentView }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res1 = await axios.get(`${API}/collaboration/projects`);
-        setProjects(res1.data);
-      } catch { }
-      try {
-        const res2 = await axios.get(`${API}/collaboration/invites`);
-        setInvites(res2.data);
-      } catch { }
+        const [projectsData, invitesData] = await Promise.all([
+          getCollaborativeProjects().catch(err => {
+            console.error('Failed to load collaborative projects:', err);
+            return [];
+          }),
+          getPendingInvites().catch(err => {
+            console.error('Failed to load invites:', err);
+            return [];
+          })
+        ]);
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+        setInvites(Array.isArray(invitesData) ? invitesData : []);
+      } catch (err) {
+        console.error('Error fetching collaboration data:', err);
+      }
     };
 
     fetchData();
@@ -44,9 +62,10 @@ const CollaborationPage = ({ setCurrentView }) => {
     if (!search.trim()) return;
     setSearching(true);
     try {
-      const res = await axios.get(`${API}/users/search?query=${encodeURIComponent(search)}`);
-      setSearchResults(res.data);
-    } catch {
+      const data = await searchUsers(search.trim());
+      setSearchResults(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Search error:', err);
       setSearchResults([]);
     }
     setSearching(false);
@@ -60,9 +79,9 @@ const CollaborationPage = ({ setCurrentView }) => {
     }
     setInviteLoading(l => ({ ...l, [userId]: true }));
     try {
-      await axios.post(`${API}/collaboration/invite`, { user_id: userId, project_id: selectedProjectId });
-      const res2 = await axios.get(`${API}/collaboration/invites`);
-      setInvites(res2.data);
+      await sendInvite(selectedProjectId, userId);
+      const res2 = await getPendingInvites();
+      setInvites(Array.isArray(res2) ? res2 : []);
       setSuccessMsg("Invitation sent successfully!");
       setTimeout(() => setSuccessMsg(""), 3000);
       setErrorMsg("");
@@ -80,18 +99,28 @@ const CollaborationPage = ({ setCurrentView }) => {
   const handleRespond = async (inviteId, accept) => {
     setResponding(r => ({ ...r, [`${inviteId}_${accept ? 'accept' : 'decline'}`]: true }));
     try {
-      await axios.post(`${API}/collaboration/invite/${inviteId}/${accept ? 'accept' : 'decline'}`);
+      if (accept) {
+        await acceptInvite(inviteId);
+      } else {
+        await declineInvite(inviteId);
+      }
       setInvites(invites => invites.filter(inv => inv.id !== inviteId));
       if (accept) {
-        const res1 = await axios.get(`${API}/collaboration/projects`);
-        setProjects(res1.data);
-        const newProject = res1.data.find(p => p.collaborators && p.collaborators.includes(user.id) && !projects.some(old => old.id === p.id));
+        const res1 = await getCollaborativeProjects();
+        const updatedProjects = Array.isArray(res1) ? res1 : [];
+        setProjects(updatedProjects);
+        const myId = user?.id || user?._id;
+        const newProject = updatedProjects.find(
+          p => p.collaborators && p.collaborators.some(c => String(c) === String(myId)) && !projects.some(old => old.id === p.id)
+        );
         if (newProject) {
           setCelebrate({ projectName: newProject.name, ownerName: newProject.owner_name });
           setTimeout(() => setCelebrate(null), 5000);
         }
       }
-    } catch { }
+    } catch (err) {
+      console.error('Failed to respond to invite:', err);
+    }
     setResponding(r => ({ ...r, [`${inviteId}_${accept ? 'accept' : 'decline'}`]: false }));
   };
 
@@ -99,17 +128,19 @@ const CollaborationPage = ({ setCurrentView }) => {
     setLoadingDetails(ld => ({ ...ld, [projectId]: true }));
     try {
       const [collabRes, inviteRes] = await Promise.all([
-        axios.get(`${API}/projects/${projectId}/collaborators`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/projects/${projectId}/invites`, { headers: { Authorization: `Bearer ${token}` } })
+        getProjectCollaborators(projectId).catch(() => []),
+        getProjectInvites(projectId).catch(() => [])
       ]);
       setProjectDetails(pd => ({
         ...pd,
         [projectId]: {
-          collaborators: collabRes.data,
-          invites: inviteRes.data.filter(i => i.status === 'pending'),
+          collaborators: Array.isArray(collabRes) ? collabRes : [],
+          invites: Array.isArray(inviteRes) ? inviteRes.filter(i => i.status === 'pending') : [],
         }
       }));
-    } catch { }
+    } catch (err) {
+      console.error('Failed to fetch project details:', err);
+    }
     setLoadingDetails(ld => ({ ...ld, [projectId]: false }));
   };
 
@@ -117,7 +148,8 @@ const CollaborationPage = ({ setCurrentView }) => {
     return <Whiteboard project={whiteboardProject} token={token} onBack={() => setWhiteboardProject(null)} />;
   }
 
-  const userOwnedProjects = projects.filter(p => p.user_id === user?.id);
+  const myUserId = user?.id || user?._id;
+  const userOwnedProjects = projects.filter(p => String(p.user_id) === String(myUserId));
 
   return (
     <div className="space-y-8">
@@ -201,9 +233,9 @@ const CollaborationPage = ({ setCurrentView }) => {
               <div className="mt-3 border border-slate-200/80 rounded-2xl divide-y divide-slate-100 overflow-hidden bg-slate-50/50">
                 {searchResults.map(u => {
                   const targetProject = projects.find(p => p.id === selectedProjectId);
-                  const isOwner = targetProject && targetProject.user_id === u.id;
-                  const isCollaborator = targetProject && targetProject.collaborators && targetProject.collaborators.includes(u.id);
-                  const alreadyInvited = invites.some(inv => inv.to_user_id === u.id && inv.project_id === selectedProjectId && inv.status === 'pending');
+                  const isOwner = targetProject && String(targetProject.user_id) === String(u.id);
+                  const isCollaborator = targetProject && Array.isArray(targetProject.collaborators) && targetProject.collaborators.some(c => String(c) === String(u.id));
+                  const alreadyInvited = invites.some(inv => String(inv.to_user_id) === String(u.id) && inv.project_id === selectedProjectId && inv.status === 'pending');
 
                   return (
                     <div key={u.id} className="p-3.5 flex items-center justify-between gap-3 bg-white hover:bg-slate-50/80 transition-colors">
@@ -332,7 +364,7 @@ const CollaborationPage = ({ setCurrentView }) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map(p => {
-              const isOwner = p.user_id === user?.id;
+              const isOwner = String(p.user_id) === String(myUserId);
               const isExpanded = expandedProjectId === p.id;
               const details = projectDetails[p.id];
 
@@ -422,7 +454,7 @@ const CollaborationPage = ({ setCurrentView }) => {
                                 <div className="flex flex-wrap gap-1.5">
                                   {details.invites.map(i => (
                                     <span key={i.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs bg-amber-50 text-amber-700 border border-amber-200/60">
-                                      {i.user_name || i.to_user_id}
+                                      {i.to_user_name || i.user_name || i.to_user_id}
                                     </span>
                                   ))}
                                 </div>
