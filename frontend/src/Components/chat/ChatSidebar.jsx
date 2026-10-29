@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { BACKEND_URL, API_URL as API } from '../../services/api.js';
+import { BACKEND_URL, API_URL as API, getWebSocketUrl } from '../../services/api.js';
 
 function ChatSidebar({ open, onClose, project, token, user }) {
   const [messages, setMessages] = useState([]);
@@ -22,7 +22,7 @@ function ChatSidebar({ open, onClose, project, token, user }) {
 
   useEffect(() => {
     if (!open || !project || !token) return;
-    const ws = new window.WebSocket(`${BACKEND_URL.replace('http', 'ws')}/api/ws/chat/${project.id}?token=${token}`);
+    const ws = new window.WebSocket(getWebSocketUrl(`/api/ws/chat/${project.id}?token=${token}`));
     wsRef.current = ws;
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);

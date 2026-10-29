@@ -7,7 +7,7 @@ import {
   updateTask,
   deleteTask
 } from '../repositories/task.repository.js';
-import { findProjectById } from '../repositories/project.repository.js';
+import { findProjectById, findProjectsByUser } from '../repositories/project.repository.js';
 
 export async function getTasksForUser({ userId, projectId, status, priority }) {
   let filter = {};
@@ -24,12 +24,11 @@ export async function getTasksForUser({ userId, projectId, status, priority }) {
     }
     filter.project_id = projectId;
   } else {
-    filter = {
-      $or: [
-        { user_id: userId },
-        { project_id: { $ne: null } }
-      ]
-    };
+    const userProjects = await findProjectsByUser(userId);
+    const projectIds = userProjects.map(p => p.id || p._id).filter(Boolean);
+    filter = projectIds.length > 0
+      ? { $or: [{ user_id: userId }, { project_id: { $in: projectIds } }] }
+      : { user_id: userId };
   }
 
   if (status) filter.status = status;

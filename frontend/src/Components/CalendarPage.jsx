@@ -3,10 +3,12 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.VITE_BACKEND_URL || window.location.origin;
-const API_URL = `${BACKEND_URL}/api`;
+import {
+  getCalendarEvents,
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent
+} from '../services/calendar.service.js';
 
 const presetColors = [
   '#3788d8',
@@ -27,7 +29,7 @@ const EventModal = ({ eventInfo, isEditing, onClose, calendarRef }) => {
   const [end, setEnd] = useState(eventInfo.end ? new Date(eventInfo.end) : new Date());
   const [allDay, setAllDay] = useState(eventInfo.allDay || false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
       alert('Please provide valid start and end times.');
@@ -42,30 +44,32 @@ const EventModal = ({ eventInfo, isEditing, onClose, calendarRef }) => {
       allDay,
     };
 
-    const api = calendarRef.current.getApi();
+    const calendarApi = calendarRef.current.getApi();
 
-    if (isEditing) {
-      axios.put(`${API_URL}/calendar/events/${eventInfo.id}`, eventData)
-        .then(() => {
-          api.refetchEvents();
-          onClose();
-        });
-    } else {
-      axios.post(`${API_URL}/calendar/events`, eventData)
-        .then(() => {
-          api.refetchEvents();
-          onClose();
-        });
+    try {
+      if (isEditing) {
+        await updateCalendarEvent(eventInfo.id, eventData);
+      } else {
+        await createCalendarEvent(eventData);
+      }
+      calendarApi.refetchEvents();
+      onClose();
+    } catch (err) {
+      console.error('Failed to save calendar event:', err);
+      alert('Could not save event. Please try again.');
     }
   };
 
-  const handleDelete = () => {
-    const api = calendarRef.current.getApi();
-    axios.delete(`${API_URL}/calendar/events/${eventInfo.id}`)
-      .then(() => {
-        api.refetchEvents();
-        onClose();
-      });
+  const handleDelete = async () => {
+    const calendarApi = calendarRef.current.getApi();
+    try {
+      await deleteCalendarEvent(eventInfo.id);
+      calendarApi.refetchEvents();
+      onClose();
+    } catch (err) {
+      console.error('Failed to delete calendar event:', err);
+      alert('Could not delete event. Please try again.');
+    }
   };
 
   return (
@@ -190,19 +194,19 @@ const CalendarPage = React.memo(() => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const fetchEvents = useCallback((info, successCallback, failureCallback) => {
-    axios.get(`${API_URL}/calendar/events?start=${info.startStr}&end=${info.endStr}`)
-      .then(response => {
-        successCallback(response.data.map(event => ({
-          ...event,
-          id: event.id,
-          allDay: event.allDay,
-        })));
-      })
-      .catch(error => {
-        console.error("Error fetching events", error);
-        failureCallback(error);
-      });
+  const fetchEvents = useCallback(async (info, successCallback, failureCallback) => {
+    try {
+      const data = await getCalendarEvents({ start: info.startStr, end: info.endStr });
+      const eventsList = Array.isArray(data) ? data : [];
+      successCallback(eventsList.map(event => ({
+        ...event,
+        id: event.id,
+        allDay: event.allDay,
+      })));
+    } catch (error) {
+      console.error("Error fetching calendar events:", error);
+      if (failureCallback) failureCallback(error);
+    }
   }, []);
 
   const handlePrev = () => {
@@ -239,8 +243,8 @@ const CalendarPage = React.memo(() => {
     setModalState({ isOpen: true, event: clickInfo.event.toPlainObject(), isEditing: true });
   }, []);
 
-  const handleEventChange = useCallback((changeInfo) => {
-    const api = calendarRef.current.getApi();
+  const handleEventChange = useCallback(async (changeInfo) => {
+    const calendarApi = calendarRef.current.getApi();
     const { event } = changeInfo;
     let start = event.start;
     let end = event.end ? event.end : event.start;
@@ -256,13 +260,14 @@ const CalendarPage = React.memo(() => {
       end: end.toISOString(),
       allDay: event.allDay,
     };
-    axios.put(`${API_URL}/calendar/events/${event.id}`, eventData)
-      .then(() => { api.refetchEvents(); })
-      .catch((error) => {
-        console.error("Failed to update event:", error);
-        changeInfo.revert();
-        alert("Could not save event changes. Please try again.");
-      });
+    try {
+      await updateCalendarEvent(event.id, eventData);
+      calendarApi.refetchEvents();
+    } catch (error) {
+      console.error("Failed to update event:", error);
+      changeInfo.revert();
+      alert("Could not save event changes. Please try again.");
+    }
   }, []);
 
   const closeModal = useCallback(() => {

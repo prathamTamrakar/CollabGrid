@@ -33,4 +33,11 @@ if (token) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
 
+export function getWebSocketUrl(path) {
+  const protocol = BACKEND_URL.startsWith('https') ? 'wss:' : 'ws:';
+  const cleanBase = BACKEND_URL.replace(/^https?:\/\//i, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${protocol}//${cleanBase}${cleanPath}`;
+}
+
 export default api;

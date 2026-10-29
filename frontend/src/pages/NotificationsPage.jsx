@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../hooks/useAuth.js';
-import { API_URL as API } from '../services/api.js';
+import {
+  getNotifications,
+  markAsRead,
+  deleteNotification,
+  deleteAllRead
+} from '../services/notification.service.js';
+import { getCollaborativeProjects } from '../services/collaboration.service.js';
 
 const NotificationsPage = ({ setCurrentView }) => {
   const [notifications, setNotifications] = useState([]);
@@ -15,8 +20,8 @@ const NotificationsPage = ({ setCurrentView }) => {
     const fetchNotifications = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API}/notifications`);
-        setNotifications(res.data);
+        const data = await getNotifications();
+        setNotifications(Array.isArray(data) ? data : []);
       } catch (err) {
         setNotifications([]);
       }
@@ -28,9 +33,11 @@ const NotificationsPage = ({ setCurrentView }) => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axios.get(`${API}/collaboration/projects`);
+        const projects = await getCollaborativeProjects();
         const map = {};
-        res.data.forEach(p => { map[p.id] = p.name; });
+        if (Array.isArray(projects)) {
+          projects.forEach(p => { map[p.id] = p.name; });
+        }
         setProjectMap(map);
       } catch { }
     };
@@ -40,7 +47,7 @@ const NotificationsPage = ({ setCurrentView }) => {
   const handleMarkRead = async (notif_id) => {
     setMarking(m => ({ ...m, [notif_id]: true }));
     try {
-      await axios.post(`${API}/notifications/${notif_id}/read`);
+      await markAsRead(notif_id);
       setNotifications(n => n.map(notif => notif.id === notif_id ? { ...notif, status: 'read' } : notif));
     } catch (err) { }
     setMarking(m => ({ ...m, [notif_id]: false }));
@@ -48,14 +55,14 @@ const NotificationsPage = ({ setCurrentView }) => {
 
   const handleDeleteNotification = async (notif_id) => {
     try {
-      await axios.delete(`${API}/notifications/${notif_id}`);
+      await deleteNotification(notif_id);
       setNotifications(n => n.filter(nf => nf.id !== notif_id));
     } catch (err) { }
   };
 
   const handleDeleteAllRead = async () => {
     try {
-      await axios.delete(`${API}/notifications/read/all`);
+      await deleteAllRead();
       setNotifications(n => n.filter(notif => notif.status !== 'read'));
     } catch (err) { }
   };
@@ -63,7 +70,7 @@ const NotificationsPage = ({ setCurrentView }) => {
   const handleMarkAllAsRead = async () => {
     try {
       await Promise.all(
-        notifications.filter(n => n.status === 'unread').map(n => axios.post(`${API}/notifications/${n.id}/read`))
+        notifications.filter(n => n.status === 'unread').map(n => markAsRead(n.id))
       );
       setNotifications(n => n.map(notif => ({ ...notif, status: 'read' })));
     } catch (err) { }

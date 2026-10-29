@@ -66,6 +66,7 @@ export async function uploadChatFile(req, res, next) {
     return success(res, {
       url: fileUrl,
       fileName: req.file.originalname,
+      file_name: req.file.originalname,
       size: req.file.size
     });
   } catch (err) {

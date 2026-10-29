@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
 import { useAuth } from '../../hooks/useAuth.js';
-import { API_URL as API } from '../../services/api.js';
+import { API_URL as API, getWebSocketUrl } from '../../services/api.js';
 import ChatSidebar from '../chat/ChatSidebar.jsx';
 
 const Whiteboard = ({ project, token, onBack }) => {
@@ -139,7 +139,7 @@ const Whiteboard = ({ project, token, onBack }) => {
 
   useEffect(() => {
     if (!project || !token) return;
-    const ws = new window.WebSocket(`${API.replace('http', 'ws')}/ws/whiteboard/${project.id}?token=${token}`);
+    const ws = new window.WebSocket(getWebSocketUrl(`/api/ws/whiteboard/${project.id}?token=${token}`));
     wsRef.current = ws;
     ws.onopen = () => setConnected(true);
     ws.onclose = () => setConnected(false);
