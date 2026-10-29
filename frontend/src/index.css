@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg-main: #f8fafc;
+  --card-bg: #ffffff;
+  --border-subtle: #e2e8f0;
+  --border-focus: #6366f1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+::selection {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Base custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+.animate-bounce-in {
+  animation: bounce-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Third-Party Plugin Overrides (FullCalendar) --- */
+.fc {
+  font-family: inherit;
+  color: #1e293b;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.02em;
+}
+
+.fc .fc-button-primary {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  text-transform: capitalize !important;
+}
+
+.fc .fc-button-primary:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.fc .fc-button-primary:focus {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+.fc .fc-button-primary:disabled {
+  opacity: 0.45 !important;
+}
+
+.fc .fc-button-primary.fc-button-active {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+.fc-button-group {
+  display: inline-flex !important;
+  gap: 0.25rem !important;
+}
+
+.fc-button-group > .fc-button {
+  border-radius: 0.75rem !important;
+}
+
+.fc-theme-standard td, 
+.fc-theme-standard th {
+  border-color: #f1f5f9 !important;
+}
+
+.fc .fc-col-header-cell {
+  background: #f8fafc;
+  padding: 0.6rem 0 !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+}
+
+.fc .fc-daygrid-day-number {
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(99, 102, 241, 0.04) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background: #6366f1;
+  color: #ffffff !important;
+  border-radius: 0.5rem;
+  margin: 0.2rem 0.4rem;
+  padding: 0.15rem 0.45rem !important;
+  display: inline-block;
+}
+
+.fc-event {
+  border-radius: 0.5rem !important;
+  padding: 2px 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  margin-bottom: 2px !important;
+  cursor: pointer !important;
+  transition: transform 0.1s ease !important;
+}
+
+.fc-event:hover {
+  transform: translateY(-1px);
+}
+
+.fc-daygrid-dot-event .fc-event-title {
+  font-weight: 600 !important;
+}
